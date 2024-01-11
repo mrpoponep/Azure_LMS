@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block stylesheet %}
+    {{ super() }}
+    <link href="{{ url_for('static', filename='css/index.css') }}" rel="stylesheet">
+{% endblock stylesheet %}
+
+{% block title %}
+    LMS - Home
+{% endblock title %}
+
+{% block content %}
+    {% if session.User.is_admin or session.User.is_manager %}
+        <div class="row">
+            <div class="col">
+                <a href="{{ url_for('user_list') }}" class="btn btn-lg btn-outline-primary btn-block" role="button">Users</a>
+            </div>
+            {% if session.User.is_admin %}                
+                <div class="col">
+                    <a href="{{ url_for('cluster_list') }}" class="btn btn-lg btn-outline-primary btn-block" role="button">Clusters</a>
+                </div>
+            {% endif %}
+            <div class="col">
+                <a href="{{ url_for('course_list') }}" class="btn btn-lg btn-outline-primary btn-block" role="button">Courses</a>
+            </div>
+        </div>
+    {% endif %}
+
+    {% for course in student_course_list %}
+        <div class="card mt-4">
+            <div class="card-body">
+                <a href="{{ url_for('course', CourseID=course["Course ID"]) }}" class="course-link">
+                    <h5 class="card-title">
+                        {{ course["Course Name"] }}
+                        <span class="badge badge-primary">
+                            Student
+                        </span>
+                    </h5>
+                </a>
+            <h6 class="card-subtitle mb-2 text-muted">Teacher: {{ course["Teacher First Name"] }} {{ course["Teacher Last Name"] }}</h6>
+            </div>
+        </div>
+    {% endfor %}
+
+    {% for course in teacher_course_list %}
+        <div class="card mt-4">
+            <div class="card-body">
+                <a href="{{ url_for('course', CourseID=course["Course ID"]) }}" class="course-link">
+                    <h5 class="card-title">
+                        {{ course["Course Name"] }}
+                        <span class="badge badge-danger">
+                            Teacher
+                        </span>
+                    </h5>
+                </a>
+            <h6 class="card-subtitle mb-2 text-muted">Teacher: {{ course["Teacher First Name"] }} {{ course["Teacher Last Name"] }}</h6>
+            </div>
+        </div>
+    {% endfor %}
+
+{% endblock content %}

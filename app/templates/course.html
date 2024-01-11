@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% from 'macro.html' import page_header %}
+
+{% block title %}
+    LMS - {{ course_data["Course Name"] }}
+{% endblock title %}
+
+{% block content %}
+    {% if is_teacher %}
+        <div class="row">
+            <div class="col">
+                <a href="{{ url_for('student_list', CourseID=course_data['Course ID']) }}" class="btn btn-lg btn-outline-primary btn-block" role="button">Students</a>
+            </div>
+            <div class="col">
+                <a href="{{ url_for('new_content', CourseID=course_data['Course ID']) }}" class="btn btn-lg btn-outline-success btn-block" role="button">New Content</a>
+            </div>
+            <div class="col">
+                <a href="{{ url_for('create_quizz', CourseID=course_data['Course ID']) }}" class="btn btn-lg btn-outline-success btn-block" role="button">Add Quizz</a>
+            </div>
+        </div>
+    {% endif %}
+    
+    {{ page_header(course_data["Course Name"]) }}
+
+    {% for content in content_list %}
+    <div class="card mt-4">
+        <div class="card-body">
+            <h3 class="card-title">
+                {{ content["Title"] }}
+            </h3>
+            <div class="card-text">
+                {{ content["TextContent"] }}
+            </div>
+            <h6 class="card-subtitle mb-2 text-muted mt-2">
+                Date: {{ content["CreatedAt"] }}
+            </h6>
+            
+            {% if is_teacher %}
+                <a href="{{ url_for('remove_content', CourseID=course_data['Course ID'], ContentID=content['ID'])}}" class="btn btn-sm btn-outline-danger" role="button">Remove</a>
+            {% endif %}
+        </div>
+    </div>
+{% endfor %}
+
+{% endblock content %}

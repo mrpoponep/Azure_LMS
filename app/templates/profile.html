@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% from 'macro.html' import input, page_header, input_select, table %}
+
+{% block title %}
+    LMS - {{ user['Username'] }} Profile
+{% endblock title %}
+
+{% block content %}
+    {{ page_header("Edit Profile") }}
+    <form method="POST" action="{{ url_for('profile', ID=user["ID"]) }}">
+        {{ input(name="Username", label="Username", value=user["Username"], required=true) }}
+        {{ input(name="FirstName", label="First Name", value=user["FirstName"]) }}
+        {{ input(name="LastName", label="Last Name", value=user["LastName"]) }}
+        {{ input(name="PhoneNumber", label="Phone Number", value=user["PhoneNumber"]) }}
+        {{ input(name="Email", label="Email", value=user["Email"]) }}
+        {{ input(name="Faculty", label="Faculty", value=user["Faculty"]) }}
+        {{ input(name="Institution", label="Institution", value=user["Institution"]) }}
+        {{ input(name="Address", label="Address", value=user["Address"]) }}
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+
+    {{ page_header("Add as Student to Course") }}
+    <form method="POST" action="{{ url_for('participate', StudentID=user["ID"]) }}" class="mb-4">
+        <div class="row">
+            <div class="col-9">
+                {{ input_select(name="CourseID", li=course_list, value="ID", value_name="Name", label="Course", required=true, default_value_name="Select Course", have_label=false) }}
+            </div>
+            <div class="col-3">
+                <button type="submit" class="btn btn-primary btn-block">Submit</button>
+            </div>
+        </div>
+    </form>
+    {% if student_course_list %}
+        {{ table(li=student_course_list, button=false) }}
+    {% endif %}
+
+    {{ page_header("Add as Manager to Cluster") }}
+    <form method="POST" action="{{ url_for('make_manager', ManagerID=user["ID"]) }}" class="mb-4">
+        <div class="row">
+            <div class="col-9">
+                {{ input_select(name="ClusterID", li=cluster_list, value="Cluster ID", value_name="Cluster Name", label="Cluster", required=true, default_value_name="Select Cluster", have_label=false) }}
+            </div>
+            <div class="col-3">
+                <button type="submit" class="btn btn-primary btn-block">Submit</button>
+            </div>
+        </div>
+    </form>
+    {% if user_cluster_list %}
+        {{ table(li=user_cluster_list, button=false) }}
+    {% endif %}
+
+{% endblock content %}
+
+{% block script %}
+    {{ super() }}
+    <script>
+        $(document).ready(function () {
+            $('.table_id').DataTable();
+        });
+    </script>
+{% endblock script %}
