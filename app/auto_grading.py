@@ -15,8 +15,8 @@ def auto_grading(student_response, suggested_answer):
             {"role": "user", "content": f"You are a teacher, your responsibilities is grading the following student response and providing the answer as a JSON file including two key correctness(True/False) and explanation:\n\nQuestion: {student_response}\n\nStudent Response: {student_response}\n\nSuggested Answer: {suggested_answer}\n\n"}
         ]
     )
-
-    return response['choices'][0]['message']['content']
+    data_dict = json.loads(response['choices'][0]['message']['content'])
+    return data_dict
 
 # Example usage:
 student_response = "Photosynthesis is the process by which plants take in carbon dioxide and release oxygen. It occurs in the chloroplasts of plant cells and involves the conversion of sunlight into energy, which is used to produce glucose."
