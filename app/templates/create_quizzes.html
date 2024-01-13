@@ -12,51 +12,37 @@
     <form action="{{ url_for('create_quizz', CourseID=CourseID) }}" method="POST" id="quizForm">
         <style>
             .option-input {
-                margin-bottom: 10px;  /* Adjust the margin-bottom value as needed */
+                margin-bottom: 10px;
             }
         </style>
-            {{ input(name="Title", label="Title", required=true) }}
         
+        {{ input(name="Title", label="Title", required=true) }}
+        {{ input(name="MaxAttempts", label="Maximum Number of Attempts", type="number",required=true) }}
+
+
         <div id="questionsContainer">
-            <!-- Existing form fields for the first question -->
-            <label for="questions[0].content">Question Content:</label>
-            <input type="text" id="questions[0].content" name="questions[0].content" required autocomplete="off">
-            <label for="questions[0].type">Question Type:</label>
-            <select id="questions[0].type" name="questions[0].type" onchange="handleQuestionTypeChange(this, 0)" >
-                <option value="short_answer">Short Answer</option>
-                <option value="multiple_choice">Multiple Choice</option>
-            </select>
-            <br>
-            
-            <div class="options-container" id="optionsContainer-0" style="display: none;">
-                <label>Options:</label>
-                <br>
-                <input class="option-input" type="text" name="questions[0].options[]"  >
-                <br>
-                <input class="option-input" name="questions[0].options[]" >
-                <br>
-                <!-- Add more input fields for options as needed -->
-            </div>
-            <label for="questions[0].answer">Correct Answer:</label>
-            <input type="text" id="questions[0].answer" name="questions[0].answer" required autocomplete="off">
+            <!-- Placeholder for dynamically added questions -->
         </div>
+
         <br>
         <button type="button" onclick="addQuestion()">Add Question</button>
         <br>
         <button type="submit" class="btn btn-success btn-block">Submit</button>
-        <input type="hidden" name="questionCounter" id="questionCounter" value="1">
+        
     </form>
 
     <script>
-        let questionCounter = 1;
-        
+        let questionCounter = 0;
+
         function addQuestion() {
             const questionsContainer = document.getElementById('questionsContainer');
             const questionDiv = document.createElement('div');
             questionDiv.className = 'question';
-    
+            questionDiv.id = 'questionDiv-' + questionCounter;
+            conter_updater=`<input type="hidden" name="questionCounter" id="questionCounter" value="${questionCounter}">`
+            questionCounter++;
             questionDiv.innerHTML = `
-            <br>
+                <br>
                 <label for="questions[${questionCounter}].content">Question Content:</label>
                 <input type="text" id="questions[${questionCounter}].content" name="questions[${questionCounter}].content" required autocomplete="off">
                 <label for="questions[${questionCounter}].type">Question Type:</label>
@@ -66,37 +52,79 @@
                 </select>
                 <br>
                 
-                <div class="options-container" id="optionsContainer-${questionCounter}" style="display: none;" autocomplete="off">
-                    <label>Options:</label>
-                    <br>
-                    <input class="option-input" type="text" name="questions[${questionCounter}].options[]" >
-                    <br>
-                    <input class="option-input" type="text" name="questions[${questionCounter}].options[]" >
-                    <br>
-                    <!-- Add more input fields for options as needed -->
+                <div class="options-container" id="optionsContainer-${questionCounter}" style="display: none;">
+                    <!-- Placeholder for dynamically added options -->
                 </div>
-                <label for="questions[${questionCounter}].answer">Correct Answer:</label>
-                <input type="text" id="questions[${questionCounter}].answer" name="questions[${questionCounter}].answer" required autocomplete="off"> 
+                <button type="button" id="addOptionButton-${questionCounter}" onclick="addOption(${questionCounter})" style="display: none;">Add Option</button>
                 <br>
-                <button type="button" onclick="addOption(${questionCounter})" style="display: none;">Add Option</button>
+
+                <label for="questions[${questionCounter}].answer">Correct Answer:</label>
+                <input type="text" id="questions[${questionCounter}].answer" name="questions[${questionCounter}].answer" required autocomplete="off">
+
+                <!-- Add the hidden input for the number of options -->
+                <input type="hidden" name="questions[${questionCounter}].num_options" id="numOptions-${questionCounter}" value="0">
+                <input type="hidden" name="questionCounter" id="questionCounter" value="${questionCounter}">
+                <button type="button" onclick="removeQuestion(${questionCounter})">Remove Question</button>
+                
+                <br>
             `;
-    
+
             questionsContainer.appendChild(questionDiv);
-            questionCounter++;
+            
         }
-    
+
         function handleQuestionTypeChange(selectElement, questionIndex) {
             const optionsContainer = document.getElementById(`optionsContainer-${questionIndex}`);
-            const addOptionButton = selectElement.nextElementSibling.nextElementSibling.nextElementSibling;
+            const addOptionButton = document.getElementById(`addOptionButton-${questionIndex}`);
             if (selectElement.value === 'multiple_choice') {
                 optionsContainer.style.display = 'block';
-                addOptionButton.style.display = 'block';
+                addOptionButton.style.display = 'inline';
             } else {
                 optionsContainer.style.display = 'none';
                 addOptionButton.style.display = 'none';
             }
         }
 
-    </script>
+        function addOption(questionIndex) {
+            const optionsContainer = document.getElementById(`optionsContainer-${questionIndex}`);
+            const numOptionsInput = document.getElementById(`numOptions-${questionIndex}`);
+
+            const newOption = document.createElement("div");
+            newOption.className = 'option-field';
+
+            newOption.innerHTML = `
+                <input class="option-input" type="text" name="questions[${questionIndex}].options[]" >
+                <button type="button" onclick="removeOption(this)">Remove Option</button>
+                <br>
+            `;
+
+            optionsContainer.appendChild(newOption);
+
+            // Increment the number of options
+            const currentNumOptions = parseInt(numOptionsInput.value);
+            numOptionsInput.value = currentNumOptions + 1;
+        }
+
+        function removeQuestion(questionId) {
+            const questionDiv = document.getElementById('questionDiv-' + questionId);
+            if (questionDiv) {
+                questionDiv.remove();
+            }
+        }
+
+        function removeOption(button) {
+            const optionField = button.parentElement;
+            optionField.remove();
+
+            // Decrement the number of options
+            const questionIndex = optionField.id.split('-')[1];
+            const numOptionsInput = document.getElementById(`numOptions-${questionIndex}`);
+            const currentNumOptions = parseInt(numOptionsInput.value);
+            
+            if (currentNumOptions > 0) {
+                numOptionsInput.value = currentNumOptions - 1;
+            }
+        }
+            </script>
 
 {% endblock content %}

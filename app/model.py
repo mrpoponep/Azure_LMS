@@ -501,8 +501,6 @@ def is_teacher(UserID, CourseID):
         bool(int(teacher["is_teacher"])),
     )
 
-
-
 def get_course(CourseID):
     conn = get_conn()
     cur = conn.cursor(dictionary=True)
@@ -522,14 +520,109 @@ def get_course(CourseID):
     conn.close()
     return (True, "Course retrieved from db, successfully", course)
 
-def create_quizz(CourseID,Title,TeacherID):
+def remove_quiz(QuizID):
+    conn = get_conn()
+    cur = conn.cursor(dictionary=True)
+
+    try:
+       # Start a transaction
+        conn.start_transaction()
+
+        # Delete associated responde first
+        delete_questions_query = f"DELETE FROM quizresponses WHERE QuizID = {QuizID}"
+        cur.execute(delete_questions_query)
+
+        # Delete associated questions first
+        delete_questions_query = f"DELETE FROM questions WHERE QuizID = {QuizID}"
+        cur.execute(delete_questions_query)
+
+        # Now, delete the quiz itself
+        delete_quiz_query = f"DELETE FROM quizzes WHERE QuizID = {QuizID}"
+        cur.execute(delete_quiz_query)
+
+        # Commit the transaction
+        conn.commit()
+
+        print(f"Quiz with QuizID {QuizID} and its associated questions deleted successfully.")
+    except Exception as e:
+        # Handle any errors that may occur during the deletion
+        print(f"Error deleting quiz and questions: {e}")
+        conn.rollback()
+    finally:
+        # Close the database connection and cursor
+        cur.close()
+        conn.close()
+
+    return True, "Success"
+
+def get_question(QuizID):
     conn = get_conn()
     cur = conn.cursor(dictionary=True)
     sql_str = f"""
-        INSERT INTO quizzes
-        (CourseID,TeacherID ,Title)
+        SELECT QuestionID, QuestionText, QuestionType, Options, CorrectAnswer
+        FROM questions
+        WHERE QuizID = {QuizID}
+    """
+    try:
+        cur.execute(sql_str)
+    except Error as e:
+        cur.close()
+        conn.close()
+        return (False, str(e), None)
+    questions = cur.fetchall()
+    cur.close()
+    conn.close()
+    return (True, "Question retrieved from the database successfully", questions)
+
+def save_responses(QuestionID,StudentID,Answer,Score,QuizID):
+    conn = get_conn()
+    cur = conn.cursor(dictionary=True)
+    sql_str = f"""
+        INSERT INTO quizresponses
+        (QuestionID, StudentID , Answer, Score, QuizID)
         VALUES
-        ({CourseID}, '{TeacherID}', '{Title}')
+        ({QuestionID}, {StudentID}, '{Answer}', {Score}, {QuizID})
+    """
+    try:
+        cur.execute(sql_str)
+        conn.commit()
+        
+    except Error as e:
+        cur.close()
+        conn.close()
+        return (False, str(e))
+    cur.close()
+    conn.close()
+    return (True, "Submited")
+
+def get_quiz_list(CourseID):
+    conn = get_conn()
+    cur = conn.cursor(dictionary=True)
+    sql_str = f"""
+        SELECT QuizID, Title, CreatedAt, AllowStudents
+        FROM quizzes
+        WHERE CourseID = {CourseID}
+    """
+    try:
+        cur.execute(sql_str)
+    except Error as e:
+        cur.close()
+        conn.close()
+        return (False, str(e), None)
+    quiz_list = cur.fetchall()
+    cur.close()
+    conn.close()
+    return (True, "Quiz list retrieved from db, successfully", quiz_list)
+
+def create_quizz(CourseID,Title,TeacherID,Max_tries):
+    conn = get_conn()
+    cur = conn.cursor(dictionary=True)
+    
+    sql_str = f"""
+        INSERT INTO quizzes
+        (CourseID,TeacherID ,Title, Max_tries)
+        VALUES
+        ({CourseID}, '{TeacherID}', '{Title}', "{Max_tries}")
     """
     try:
         cur.execute(sql_str)
@@ -540,20 +633,107 @@ def create_quizz(CourseID,Title,TeacherID):
     except Error as e:
         cur.close()
         conn.close()
-        return (False, str(e))
+        return (0,False, str(e))
     cur.close()
     conn.close()
-    return (True, "Content created successfully.",quizz_id)
+    return (quizz_id, True, "Content created successfully.",)
 
-def add_question_to_quiz():
+def view_quiz_responses(CourseID,quiz_id):
     conn = get_conn()
     cur = conn.cursor(dictionary=True)
     sql_str = f"""
-        insert into questions
-        (QuestionID, QuizID, QuestionText, QuestionType, Options, CorrectAnswer)
-        VALUES
-        ({QuestionID},{QuizID},{QuestionText},'short_answer','A B C D', 'Correct')
+        SELECT
+            qr.ResponseID,
+            u.ID,
+            u.UserName,
+            qr.QuizID,
+            qr.QuestionID,
+            qr.Answer,
+            qr.Score,
+            qr.Tries,
+            qr.TimeTaken
+        FROM
+            QuizResponses qr
+        JOIN
+            Users u ON qr.StudentID = u.ID
+        WHERE
+            qr.QuizID = {quiz_id};
     """
+    try:
+        cur.execute(sql_str)
+    except Error as e:
+        cur.close()
+        conn.close()
+        return (False, str(e), None)
+    rows = cur.fetchall()
+
+    cur.close()
+    conn.close()
+    return (True, "User list retrieved from db, successfully", rows)
+
+def add_question_to_quiz(quiz_id,question_data):
+    conn = get_conn()
+    cur = conn.cursor(dictionary=True)
+    for question in question_data:
+        # Extract data from the question dictionary
+        question_text = question['content']
+        question_type = question['type']
+        if question['options']:
+            options = '*'.join(question['options'])
+        else:
+            options = None
+        correct_answer = question['answer']
+
+        # Insert the question into the database
+        sql_str = f"""
+            INSERT INTO questions
+            ( QuizID, QuestionText, QuestionType, Options, CorrectAnswer)
+            VALUES
+            ({quiz_id}, '{question_text}', '{question_type}', '{options}', '{correct_answer}')
+        """
+        try:
+            cur.execute(sql_str)
+            conn.commit()
+        except Error as e:
+            cur.close()
+            conn.close()
+            return (False, str(e))
+    
+    cur.close()
+    conn.close()
+    return (True, "Content created successfully.")
+
+def stop_students_viewing(QuizID):
+    conn = get_conn()
+    cur = conn.cursor(dictionary=True)
+    sql_str = f"""
+        UPDATE `lms`.`quizzes` SET `AllowStudents` = 0 WHERE (`QuizID` = {QuizID});"""
+    try:
+        cur.execute(sql_str)
+        conn.commit()
+    except Error as e:
+        cur.close()
+        conn.close()
+        return (False, str(e))
+    cur.close()
+    conn.close()
+    return (True, "Content created successfully.")
+
+def allow_students_viewing(QuizID):
+    conn = get_conn()
+    cur = conn.cursor(dictionary=True)
+    sql_str = f"""
+        UPDATE `lms`.`quizzes` SET `AllowStudents` = 1 WHERE (`QuizID` = {QuizID});"""
+    try:
+        cur.execute(sql_str)
+        conn.commit()
+    except Error as e:
+        cur.close()
+        conn.close()
+        return (False, str(e))
+    cur.close()
+    conn.close()
+    return (True, "Content created successfully.")
 
 def create_content(CourseID, Title, TextContent):
     """

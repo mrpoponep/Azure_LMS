@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% from 'macro.html' import page_header, input, text_area %}
+
+{% block title %}
+    LMS - Quiz 
+{% endblock title %}
+
+{% block content %}
+
+    {{ page_header("Quiz") }}
+    <form action="{{ url_for('quiz_responses', CourseID=CourseID , QuizID=QuizID)}}" method="POST" id="quizForm">
+        <style>
+            .option-input {
+                margin-bottom: 10px;  /* Adjust the margin-bottom value as needed */
+            }
+        </style>
+        
+        {% for question in questions %}
+        <div class="question">
+            <label for="question{{ loop.index }}content">Question {{ loop.index }}:</label>
+            <p>{{ question.QuestionText }}</p>
+            {% if question.QuestionType == 'short_answer' %}
+                {{ input(name="answer" ~ loop.index , label="Your Answer", required=true) }}
+            {% elif question.QuestionType == 'multiple_choice' %}
+                {% set radio_group_name = loop.index %}
+                {% for option in question.Options %}
+                    <input type="radio" id="{{ radio_group_name }}option{{ loop.index }}" name="answer{{ radio_group_name }}" value="{{ option }}" required>
+                    <label for="{{ radio_group_name }}option{{ loop.index }}">{{ option }}</label>
+                    <br>
+                {% endfor %}
+            {% endif %}
+
+            <hr>
+        </div>
+        {% endfor %}
+
+        <button type="submit" class="btn btn-success btn-block">Submit</button>
+    </form>
+
+{% endblock content %}

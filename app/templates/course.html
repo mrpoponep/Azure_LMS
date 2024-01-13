@@ -43,4 +43,37 @@
     </div>
 {% endfor %}
 
+ <!----------------------Duyen: add quiz list------------------------>
+ {% for quiz in quiz_list %}
+    <div class="card mt-4">
+        <div class="card-body">
+            <h3 class="card-title">
+                {% if quiz["AllowStudents"] == 1 %}
+                    <span class="text-success">[Visible]</span>
+                    <a id="quiz-title-{{ quiz['QuizID'] }}" href="{{ url_for('quiz_responses', CourseID=course_data['Course ID'], QuizID=quiz['QuizID']) }}">{{ quiz["Title"] }}</a>
+                {% else %}
+                    <span class="text-warning">[Hidden]</span>
+                    {{ quiz["Title"] }}
+                {% endif %}
+            </h3>
+            <h6 class="card-subtitle mb-2 text-muted mt-2">
+                Date: {{ quiz["CreatedAt"] }}
+            </h6>
+
+            {% if is_teacher %}
+
+                <a href="{{ url_for('view_quiz_responses', CourseID=course_data['Course ID'], QuizID=quiz['QuizID']) }}" class="btn btn-sm btn-info" role="button">View Quiz Results</a>
+                {% if quiz["AllowStudents"] == 1 %}
+                    <a href="{{ url_for('stop_students_viewing', CourseID=course_data['Course ID'], QuizID=quiz['QuizID']) }}" class="btn btn-sm btn-warning" role="button">Stop Students from Viewing</a>
+                {% else %}
+                    <a href="{{ url_for('allow_students_viewing', CourseID=course_data['Course ID'], QuizID=quiz['QuizID']) }}" class="btn btn-sm btn-success" role="button">Allow Students to View</a>
+                {% endif %}
+                <a href="{{ url_for('remove_quiz', CourseID=course_data['Course ID'], QuizID=quiz['QuizID'])}}" class="btn btn-sm btn-outline-danger" role="button">Remove</a>
+            {% endif %}
+            
+        </div>
+    </div>
+{% endfor %}
+
+ <!-----------------------END: add quiz list------------------------>
 {% endblock content %}
