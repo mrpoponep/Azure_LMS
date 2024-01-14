@@ -574,27 +574,6 @@ def get_question(QuizID):
     conn.close()
     return (True, "Question retrieved from the database successfully", questions)
 
-def save_responses(QuestionID,StudentID,Answer,Score,QuizID):
-    conn = get_conn()
-    cur = conn.cursor(dictionary=True)
-    sql_str = f"""
-        INSERT INTO quizresponses
-        (QuestionID, StudentID , Answer, Score, QuizID)
-        VALUES
-        ({QuestionID}, {StudentID}, '{Answer}', {Score}, {QuizID})
-    """
-    try:
-        cur.execute(sql_str)
-        conn.commit()
-        
-    except Error as e:
-        cur.close()
-        conn.close()
-        return (False, str(e))
-    cur.close()
-    conn.close()
-    return (True, "Submited")
-
 def get_quiz_list(CourseID):
     conn = get_conn()
     cur = conn.cursor(dictionary=True)
@@ -809,3 +788,111 @@ def get_course_student_list(CourseID):
     cur.close()
     conn.close()
     return (True, "Student list retrieved from db, successfully", student_list)
+
+def find_tries(QuizID, QuestionID, StudentID):
+    conn = get_conn()
+    cur = conn.cursor(dictionary=True)
+    sql_str = f"""
+        SELECT MAX(Tries) AS Tries FROM quizresponses 
+        WHERE QuizID = {QuizID} AND QuestionID = {QuestionID} AND StudentID = {StudentID};
+    """
+    try:
+        cur.execute(sql_str)
+    except Error as e:
+        cur.close()
+        conn.close()
+        return (False, str(e), None)
+    tries = cur.fetchone()
+    cur.close()
+    conn.close()
+    return (True, "Tries retrieved from the database successfully", tries)
+
+def save_responses(QuizID, QuestionID ,StudentID, Tries, Answer,Score,Explanation):
+    conn = get_conn()
+    cur = conn.cursor(dictionary=True)
+    sql_str = """
+        INSERT INTO quizresponses
+        (QuizID, QuestionID, StudentID, Tries, Answer, Score, Explanation)
+        VALUES
+        (%s, %s, %s, %s, %s, %s, %s)
+    """
+
+    data = (QuizID, QuestionID, StudentID, Tries, Answer, Score, Explanation)
+    try:
+        cur.execute(sql_str, data)
+        conn.commit()
+        
+    except Error as e:
+        cur.close()
+        conn.close()
+        return (False, str(e))
+    cur.close()
+    conn.close()
+    return (True, "Submited")
+#-----------------------------END Duyen------------------------------
+
+def quiz_result_teacher_list(QuizID):
+    conn = get_conn()
+    cur = conn.cursor(dictionary=True)
+    sql_str = f"""
+        SELECT q.StudentID, u.FirstName, u.LastName, MAX(q.TotalScore) AS MAXTotalScore
+        FROM (
+            SELECT StudentID, Tries, SUM(Score) AS TotalScore
+            FROM quizresponses
+            WHERE QuizID = {QuizID}
+            GROUP BY StudentID, Tries
+        ) q
+        JOIN users u ON q.StudentID = u.ID
+        GROUP BY q.StudentID;
+    """
+    try:
+        cur.execute(sql_str)
+    except Error as e:
+        cur.close()
+        conn.close()
+        return (False, str(e), None)
+    result_teacher = cur.fetchall()
+    cur.close()
+    conn.close()
+    return (True, "Result retrieved from the database successfully", result_teacher)
+
+def quiz_result_student_list(QuizID,StudentID):
+    conn = get_conn()
+    cur = conn.cursor(dictionary=True)
+    sql_str = f"""
+        SELECT q.StudentID, u.FirstName, u.LastName, q.Tries, SUM(q.Score) AS TotalScore
+        FROM QuizResponses q
+        JOIN Users u ON q.StudentID = u.ID
+        WHERE q.QuizID = {QuizID} AND q.StudentID = {StudentID}
+        GROUP BY q.StudentID, u.FirstName, u.LastName, q.Tries;
+    """
+    try:
+        cur.execute(sql_str)
+    except Error as e:
+        cur.close()
+        conn.close()
+        return (False, str(e), None)
+    result_student = cur.fetchall()
+    cur.close()
+    conn.close()
+    return (True, "Result retrieved from the database successfully", result_student)
+
+def quiz_result_student(QuizID, StudentID, Tries):
+    conn = get_conn()
+    cur = conn.cursor(dictionary=True)
+    sql_str = f"""
+        SELECT Q.QuestionText, QR.Score, QR.Answer, Q.CorrectAnswer, Q.QuestionID, QR.Explanation 
+        FROM QuizResponses QR
+        JOIN Questions Q ON QR.QuestionID = Q.QuestionID
+        WHERE QR.QuizID = {QuizID} AND QR.StudentID = {StudentID} AND QR.Tries = {Tries}; 
+    """
+    try:
+        cur.execute(sql_str)
+    except Error as e:
+        cur.close()
+        conn.close()
+        return (False, str(e), None)
+    results = cur.fetchall()
+    cur.close()
+    conn.close()
+    return (True, "Result retrieved from the database successfully", results)

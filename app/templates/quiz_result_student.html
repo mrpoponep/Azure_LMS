@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% from 'macro.html' import input, page_header, input_select, table %}
+
+{% block title %}
+    LMS - ReView
+{% endblock title %}
+
+{% block content %}
+    <h1 class="quiz-title">Quiz Result - Student</h1>
+
+    {% for result in results %}
+        <h3 class="question-title">Question {{ loop.index }}:</h3>
+        <p class="question-text">{{ result['QuestionText'] }}</p>
+        <p><strong>Score:</strong> 
+            <span class="score {% if result['Score'] == 1 %}green{% else %}red{% endif %}">
+                {% if result['Score'] == 1 %}
+                    <span class="circle">&#10003;</span>
+                {% else %}
+                    <span class="circle">&#10007;</span>
+                {% endif %}
+                {{ result['Score'] }}
+            </span>
+        </p>
+        <p><strong>Answer:</strong> {{ result['Answer'] }}</p>
+        <p><strong><span class="green">Correct Answer:</strong> {{ result['CorrectAnswer'] }}</span></p>
+        
+        <!-- Add a button to show explanation -->
+        <button class="explanation-button" onclick="showExplanation('{{ result['Explanation'] }}', {{ loop.index }})">Show Explanation</button>
+        <p id="explanation-{{ loop.index }}" style="display: none;"><strong>Explanation:</strong> {{ result['Explanation'] }}</p>
+    {% endfor %}
+
+    <script>
+        function showExplanation(explanation, index) {
+            var explanationElement = document.getElementById('explanation-' + index);
+            explanationElement.style.display = 'block';
+        }
+    </script>
+{% endblock content %}

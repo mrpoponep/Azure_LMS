@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
+import json
 import openai
 import os
 
@@ -112,6 +113,7 @@ def remove_quiz(CourseID, QuizID):
 @app.route("/course/<int:CourseID>")
 @login_required
 def course(CourseID):
+    currentID = current_user.id
     success, message, is_teacher = model.is_teacher(current_user.id, CourseID)
     if not success:
         flash(message, "warning")
@@ -137,6 +139,7 @@ def course(CourseID):
         course_data=course_data,
         content_list=content_list,
         quiz_list=quiz_list, # add list quiz
+        currentID =currentID,
     )
 @app.route("/login/", methods=["GET", "POST"])
 def login():
@@ -456,17 +459,25 @@ def quiz_responses(CourseID,QuizID):
             question_options = question_data['Options'].split('*')
             question_data['Options'] = question_options
         questions.append(question_data)
+    success, message, tries = model.find_tries(QuizID, questions_data[0]['QuestionID'], StudentID)
+    Tries = 1
+    if tries['Tries'] is not None:
+        Tries = int(tries['Tries']) + 1
     if request.method == "POST":
         i=0
         j=1
         for question in questions:
             answers = request.form.get(f'answer{j}')
+            #auto_grading(question_title, question_type, options, student_response, suggested_answer)
+            print(question['QuestionText'],question['QuestionType'],question['Options'],answers,question['CorrectAnswer'])
+            result = auto_grading(question['QuestionText'],question['QuestionType'],question['Options'],answers,question['CorrectAnswer'])
             j+=1
-            if answers == question['CorrectAnswer']:
+            if result["correctness"]:
                 score = 1
             else:
                 score = 0
-            success, message = model.save_responses(int(question['QuestionID']), StudentID, answers, score)
+            #QuizID, QuestionID ,StudentID, Tries, Answer,Score,Explanation
+            success, message = model.save_responses(QuizID, int(question['QuestionID']), StudentID, Tries, answers, score, result["explanation"])
             
             if not success:
                 flash(message, "warning")
@@ -475,10 +486,75 @@ def quiz_responses(CourseID,QuizID):
         return redirect(url_for("course", CourseID=CourseID))
 
     return render_template("quiz_responses.html", CourseID=CourseID, QuizID=QuizID, questions=questions)
+#----------------------------END quiz responses------------------------------------
 
-def auto_grading(answers,correct_answer):
-    score=1
-    return score
+@app.route("/quiz_result_teacher_list/<int:CourseID>/<int:QuizID>", methods=["GET", "POST"])
+@login_required
+def quiz_result_teacher_list(CourseID,QuizID):
+    is_teacher=1
+    success, message, result_teacher = model.quiz_result_teacher_list(QuizID)
+    if not success:
+        flash(message, "warning")
+        return redirect(url_for("course", CourseID=CourseID))
+    return render_template("quiz_result_list.html", 
+                           result_teacher=result_teacher, 
+                           is_teacher=is_teacher,
+                           CourseID=CourseID,
+                           QuizID=QuizID,
+                           )
 
+@app.route("/quiz_result_student_list/<int:CourseID>/<int:QuizID>/<int:StudentID>", methods=["GET", "POST"])
+@login_required
+def quiz_result_student_list(CourseID,QuizID,StudentID):
+    is_student = 1
+    success, message, result_student = model.quiz_result_student_list(QuizID,StudentID)
+    if not success:
+        flash(message, "warning")
+        return redirect(url_for("course", CourseID=CourseID))
+    return render_template("quiz_result_list.html",
+                           result_student=result_student, 
+                           is_student=is_student,
+                           CourseID=CourseID,
+                           QuizID=QuizID,
+                           )
+
+@app.route("/quiz_result_student/<int:CourseID>/<int:QuizID>/<int:StudentID>/<int:Tries>", methods=["GET", "POST"])
+@login_required
+def quiz_result_student(CourseID,QuizID,StudentID,Tries):
+    success, message, results = model.quiz_result_student(QuizID,StudentID,Tries)
+    if not success:
+        flash(message, "warning")
+        return redirect(url_for("quiz_result_student_list", CourseID=CourseID, QuizID=QuizID, StudentID=StudentID))
+    return render_template("quiz_result_student.html",
+                           results=results,
+
+                           )
+
+@app.route('/chatbot_explain', methods=['POST'])
+def endpoint_chatbot():
+    pass
+    
+def auto_grading(question_title, question_type, options, student_response, suggested_answer):
+    openai.api_type = "azure"
+    openai.api_version = "2023-05-15"
+    openai.api_base = os.getenv("AZURE_OPENAI_ENDPOINT")
+    openai.api_key = os.getenv("AZURE_OPENAI_KEY")
+
+    # Create the prompt with the question title and options
+    if question_type == 'multiple_choice':
+        prompt = f"You are a teacher, your responsibilities is grading the following student response and providing the answer as a JSON file including two key correctness(True/False) and a less than 5000 characters explanation:\n\nQuestion: {question_title}\n\nOptions: {', '.join(options)}\n\n Student Response: {student_response}\n\nSuggested Answer: {suggested_answer}\n\n"
+    else:
+        prompt = f"You are a teacher, your responsibilities is grading the following student response and providing the answer as a JSON file including two key correctness(True/False) and explanation:\n\nQuestion: {question_title}\n\nStudent Response: {student_response}\n\nSuggested Answer: {suggested_answer}\n\n"
+
+    response = openai.ChatCompletion.create(
+        engine="GPT35TURBO16K",
+        messages=[
+            {"role": "system", "content": "Assistant is a large language model trained by OpenAI."},
+            {"role": "user", "content": prompt}
+        ]
+    )
+    
+    data_dict = json.loads(response['choices'][0]['message']['content'])
+    return data_dict
 if __name__ == '__main__':
     app.run(debug=True)

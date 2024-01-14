@@ -56,13 +56,17 @@
                     {{ quiz["Title"] }}
                 {% endif %}
             </h3>
+        
+                {% if not is_teacher %}
+                <div>
+                    <a href="{{ url_for('quiz_result_student_list', CourseID=course_data['Course ID'], QuizID=quiz['QuizID'], StudentID=currentID) }}" class="btn btn-primary">Result</a>
+                </div>
+                {% endif %}
             <h6 class="card-subtitle mb-2 text-muted mt-2">
                 Date: {{ quiz["CreatedAt"] }}
             </h6>
-
             {% if is_teacher %}
-
-                <a href="{{ url_for('view_quiz_responses', CourseID=course_data['Course ID'], QuizID=quiz['QuizID']) }}" class="btn btn-sm btn-info" role="button">View Quiz Results</a>
+                <a href="{{ url_for('quiz_result_teacher_list',CourseID=course_data['Course ID'], QuizID=quiz['QuizID']) }}" class="btn btn-sm btn-info" role="button">View Quiz Results</a>
                 {% if quiz["AllowStudents"] == 1 %}
                     <a href="{{ url_for('stop_students_viewing', CourseID=course_data['Course ID'], QuizID=quiz['QuizID']) }}" class="btn btn-sm btn-warning" role="button">Stop Students from Viewing</a>
                 {% else %}

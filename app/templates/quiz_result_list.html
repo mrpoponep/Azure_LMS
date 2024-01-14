@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+
+{% from 'macro.html' import table, page_header %}
+
+{% block title %}
+    LMS - Result
+{% endblock title %}
+
+{% block content %}
+    {% if is_teacher %}
+        {{ page_header("Students Result") }}
+        <table class="table" id="table_id">
+            <thead>
+                <tr>
+                    <th class="text-center">Student ID</th>
+                    <th class="text-center">First Name</th>
+                    <th class="text-center">Last Name</th>
+                    <th class="text-center">Max Total Score</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for teacher_result in result_teacher %}
+                    <tr>
+                        <td class="text-center">{{ teacher_result['StudentID'] }}</td>
+                        <td class="text-center">{{ teacher_result['FirstName'] }}</td>
+                        <td class="text-center">{{ teacher_result['LastName'] }}</td>
+                        <td class="text-center">{{ teacher_result['MAXTotalScore'] }}</td>
+                        <td>
+                            <a href="{{ url_for('quiz_result_student_list', CourseID=CourseID, QuizID=QuizID, StudentID=teacher_result['StudentID']) }}" class="btn btn-primary">View</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+    {% if is_student %}
+    {{ page_header("Student Result") }}
+    <table class="table" id="table_id">
+        <thead>
+            <tr>
+                <th class="text-center">Student ID</th>
+                <th class="text-center">First Name</th>
+                <th class="text-center">Last Name</th>
+                <th class="text-center">Tries</th>
+                <th class="text-center">Total Score</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for student_result in result_student %}
+                <tr>
+                    <td class="text-center">{{ student_result['StudentID'] }}</td>
+                    <td class="text-center">{{ student_result['FirstName'] }}</td>
+                    <td class="text-center">{{ student_result['LastName'] }}</td>
+                    <td class="text-center">{{ student_result['Tries'] }}</td>
+                    <td class="text-center">{{ student_result['TotalScore'] }}</td>
+                    <td>
+                        <a href="{{ url_for('quiz_result_student', CourseID=CourseID, QuizID=QuizID, StudentID=student_result['StudentID'], Tries=student_result['Tries']) }}" class="btn btn-primary">ReView</a>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+{% endblock content %}
+
+{% block script %}
+    {{ super() }}
+    <script>
+        $(document).ready(function () {
+            $('#table_id').DataTable();
+        });
+    </script>
+{% endblock script %}

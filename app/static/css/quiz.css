@@ -1,0 +1,32 @@
+.quiz-title {
+    margin-bottom: 20px;
+}
+
+.question-title {
+    margin-top: 30px;
+}
+
+.question-text {
+    margin-left: 20px;
+    font-size: larger;
+    margin-top: 5px;
+}
+
+.score {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 50%;
+}
+
+.green {
+    color: green;
+}
+
+.red {
+    color: red;
+}
+
+.circle {
+    vertical-align: middle;
+    margin-right: 5px;
+}
