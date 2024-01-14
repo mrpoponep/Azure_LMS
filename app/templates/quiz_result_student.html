@@ -25,15 +25,7 @@
         <p><strong>Answer:</strong> {{ result['Answer'] }}</p>
         <p><strong><span class="green">Correct Answer:</strong> {{ result['CorrectAnswer'] }}</span></p>
         
-        <!-- Add a button to show explanation -->
-        <button class="explanation-button" onclick="showExplanation('{{ result['Explanation'] }}', {{ loop.index }})">Show Explanation</button>
-        <p id="explanation-{{ loop.index }}" style="display: none;"><strong>Explanation:</strong> {{ result['Explanation'] }}</p>
+        <!-- Directly show the explanation -->
+        <p><strong>Explanation:</strong> {{ result['Explanation'] }}</p>
     {% endfor %}
-
-    <script>
-        function showExplanation(explanation, index) {
-            var explanationElement = document.getElementById('explanation-' + index);
-            explanationElement.style.display = 'block';
-        }
-    </script>
 {% endblock content %}
