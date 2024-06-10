@@ -84,8 +84,6 @@ def index():
         student_course_list=student_course_list,
     )
 
-@app.route("/chatbot")
-
 @app.route("/remove_content/<int:CourseID>/<int:ContentID>")
 @login_required
 def remove_content(CourseID,ContentID):
@@ -133,6 +131,10 @@ def course(CourseID):
     if not success:
         flash(message, "warning")
         return redirect(url_for("index"))
+    success, message, template = model.get_template(CourseID)
+    if not success:
+        flash(message, "warning")
+        return redirect(url_for("index"))
     return render_template(
         "course.html",
         is_teacher=is_teacher,
@@ -140,6 +142,7 @@ def course(CourseID):
         content_list=content_list,
         quiz_list=quiz_list, # add list quiz
         currentID =currentID,
+        template= template
     )
 @app.route("/login/", methods=["GET", "POST"])
 def login():
@@ -317,11 +320,13 @@ def make_manager(ManagerID):
 @app.route("/courses/", methods=["GET", "POST"])
 @login_required
 def course_list():
+    ClusterID=None
     if request.method == "POST":
         Name = request.form.get("Name", "DEFAULT")
         ClusterID = request.form.get("ClusterID", "DEFAULT")
         TeacherID = request.form.get("TeacherID", "DEFAULT")
-        success, message = model.create_course(Name, TeacherID, ClusterID)
+        TemplateID = request.form.get("TemplateID", "DEFAULT")
+        success, message = model.create_course(Name, TeacherID, ClusterID,TemplateID)
         if success:
             flash(message, "success")
             return redirect(url_for("course_list"))
@@ -331,9 +336,6 @@ def course_list():
     if not success:
         flash(message, "warning")
         return redirect(url_for("course_list"))
-    success, message, cluster_list = model.get_cluster_list(
-        current_user.id, current_user.is_admin()
-    )
     if not success:
         flash(message, "warning")
         return redirect(url_for("index"))
@@ -341,12 +343,22 @@ def course_list():
     if not success:
         flash(message, "warning")
         return redirect(url_for("index"))
+    success, message, template_list = model.get_template_list()
+    if not success:
+        flash(message, "warning")
+        return redirect(url_for("course_list"))
+    success, message, cluster_list = model.get_all_cluster_list()
+    if not success:
+        flash(message, "warning")
+        return redirect(url_for("course_list"))
     return render_template(
-        "course_list.html",
-        course_list=course_list,
-        cluster_list=cluster_list,
-        user_list=user_list,
-    )
+            "course_list.html",
+            course_list=course_list,
+            cluster_list=cluster_list,
+            user_list=user_list,
+            template_list=template_list
+        )
+
 
 
 @app.route("/participate/<int:StudentID>", methods=["POST"])
@@ -374,6 +386,20 @@ def student_list(CourseID):
 @app.route("/newcontent/<int:CourseID>/", methods=["GET", "POST"])
 @login_required
 def new_content(CourseID):
+    if request.method == "POST":
+        Title = request.form.get("Title", "")
+        TextContent = request.form.get("TextContent", "")
+        success, message = model.create_content(CourseID, Title, TextContent)
+        if success:
+            flash("Content created successfully.", "success")
+            return redirect(url_for("course", CourseID=CourseID))
+        flash(message, "warning")
+        return redirect(url_for("course", CourseID=CourseID))
+    return render_template("new_content.html", CourseID=CourseID)
+
+@app.route("/new_template", methods=["GET", "POST"])
+@login_required
+def new_template(CourseID):
     if request.method == "POST":
         Title = request.form.get("Title", "")
         TextContent = request.form.get("TextContent", "")
@@ -470,14 +496,15 @@ def quiz_responses(CourseID,QuizID):
             answers = request.form.get(f'answer{j}')
             #auto_grading(question_title, question_type, options, student_response, suggested_answer)
             print(question['QuestionText'],question['QuestionType'],question['Options'],answers,question['CorrectAnswer'])
-            result = auto_grading(question['QuestionText'],question['QuestionType'],question['Options'],answers,question['CorrectAnswer'])
-            j+=1
-            if result["correctness"]:
+    
+            if question['CorrectAnswer']==answers:
                 score = 1
             else:
                 score = 0
+            i+=1
+            j+=1
             #QuizID, QuestionID ,StudentID, Tries, Answer,Score,Explanation
-            success, message = model.save_responses(QuizID, int(question['QuestionID']), StudentID, Tries, answers, score, result["explanation"])
+            success, message = model.save_responses(QuizID, int(question['QuestionID']), StudentID, Tries, answers, score)
             
             if not success:
                 flash(message, "warning")

@@ -3,7 +3,7 @@ import model
 
 fake = Faker()
 
-for i in range(100):
+for i in range(1000):
     profile = fake.profile()
     success, message = model.create_user(
         Username=profile["name"].replace(" ", "_"),

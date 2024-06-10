@@ -6,9 +6,8 @@ import timeit
 def auto_grading(question_title, question_type, options, student_response, suggested_answer):
     openai.api_type = "azure"
     openai.api_version = "2023-05-15"
-    openai.api_base = os.getenv("AZURE_OPENAI_ENDPOINT")
-    openai.api_key = os.getenv("AZURE_OPENAI_KEY")
-
+    openai.api_base = "https://sunhackathon26.openai.azure.com/"
+    openai.api_key = "31de78c622dc481b9d25cb3ffde694f0"
     # Create the prompt with the question title and options
     if question_type == 'multiple_choice':
         prompt = f"You are a teacher, your responsibilities is grading the following student response andproviding the answer as a JSON file including two key correctness(True/False) and explanation:\n\nQuestion: {question_title}\n\nOptions: {', '.join(options)}\n\n Student Response: {student_response}\n\nSuggested Answer: {suggested_answer}\n\n"

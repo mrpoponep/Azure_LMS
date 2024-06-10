@@ -80,4 +80,17 @@
 {% endfor %}
 
  <!-----------------------END: add quiz list------------------------>
+
+{% if template %}
+<div class="card mt-4">
+    <div class="card-body">
+        <h3 class="card-title">
+            {{ template['Description'] }}
+        </h3>
+        <div class="card-text">
+            {{ template['Contents'] }}
+        </div>
+    </div>
+</div>
+{% endif %}
 {% endblock content %}

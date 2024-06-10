@@ -10,19 +10,26 @@
     {{ page_header("Course List") }}
     <form method="POST" action="{{ url_for('course_list') }}" class="mb-4">
         <div class="row">
-            <div class="col-3">
+            <div class="col-md-3">
                 <input name="Name" type="text" class="form-control" placeholder="Course Name">
             </div>
-            <div class="col-3">
+            <div class="col-md-3">
                 {{ input_select(name="TeacherID", li=user_list, value="ID", value_name="Username", label="Teacher", required=true, default_value_name="Select Teacher", have_label=false) }}
             </div>
-            <div class="col-3">
+            <div class="col-md-3">
                 {{ input_select(name="ClusterID", li=cluster_list, value="Cluster ID", value_name="Cluster Name", label="Cluster", required=true, default_value_name="Select Cluster", have_label=false) }}
             </div>
-            <div class="col-3">
+            <div class="col-md-3">
+                {{ input_select(name="TemplateID", li=template_list, value="ID", value_name="TemplateID", label="Template", required=true, default_value_name="Select Template", have_label=false) }}
+            </div>
+            <div class="col-md-3">
                 <button type="submit" class="btn btn-success btn-block">Create New Course</button>
             </div>
         </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     </form>
     {{ table(li=course_list, button=false) }}
 {% endblock content %}

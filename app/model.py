@@ -59,7 +59,7 @@ def create_user(
     Password = generate_password_hash(Password)
     sql_str = f"""
         INSERT INTO Users
-        (Username, Password, is_student, is_teacher, is_manager, is_admin,
+        (Username, Password, is_Student, is_Teacher, is_Manager, is_Admin,
         LastName, FirstName, PhoneNumber, Email, Faculty, Institution, Address)
         VALUES
         ('{Username}', '{Password}', {is_student}, {is_teacher},
@@ -81,7 +81,7 @@ def remove_content(ContentID):
     conn = get_conn()
     cur = conn.cursor(dictionary=True)
     sql_str = f"""
-        DELETE FROM contents WHERE ID={ContentID};
+        DELETE FROM Contents WHERE ID={ContentID};
     """
     try:
         cur.execute(sql_str)
@@ -157,6 +157,23 @@ def get_teacher_list():
     cur.close()
     conn.close()
     return (True, "User list retrieved from db, successfully", user_list)
+
+def get_template_list():
+    conn = get_conn()
+    cur = conn.cursor(dictionary=True)
+    sql_str = """
+        SELECT * FROM coursetemplates
+    """
+    try:
+        cur.execute(sql_str)
+    except Error as e:
+        cur.close()
+        conn.close()
+        return (False, str(e), None)
+    template_list = cur.fetchall()
+    cur.close()
+    conn.close()
+    return (True, "User list retrieved from db, successfully", template_list)
 
 
 def get_user_profile(ID):
@@ -348,7 +365,7 @@ def get_all_cluster_list():
     return (True, "Clusters retrieved from db, successfully.", cluster_list)
 
 
-def create_course(Name, TeacherID, ClusterID):
+def create_course(Name, TeacherID, ClusterID, TemplateID="NULL"):
     """
     CREATE TABLE Courses (
         ID INT NOT NULL AUTO_INCREMENT,
@@ -366,9 +383,9 @@ def create_course(Name, TeacherID, ClusterID):
     cur = conn.cursor(dictionary=True)
     sql_str = f"""
         INSERT INTO Courses
-        (Name, ClusterID, TeacherID)
+        (Name, ClusterID, TeacherID, TemplateID)
         VALUES
-        ('{Name}', {ClusterID}, {TeacherID})
+        ('{Name}', {ClusterID}, {TeacherID}, '{TemplateID}')
     """
     try:
         cur.execute(sql_str)
@@ -381,6 +398,8 @@ def create_course(Name, TeacherID, ClusterID):
     conn.close()
     return (True, "Course created successfully.")
 
+def create_template(course):
+    pass
 
 def get_all_course_list():
     conn = get_conn()
@@ -529,15 +548,15 @@ def remove_quiz(QuizID):
         conn.start_transaction()
 
         # Delete associated responde first
-        delete_questions_query = f"DELETE FROM quizresponses WHERE QuizID = {QuizID}"
+        delete_questions_query = f"DELETE FROM Quizresponses WHERE QuizID = {QuizID}"
         cur.execute(delete_questions_query)
 
         # Delete associated questions first
-        delete_questions_query = f"DELETE FROM questions WHERE QuizID = {QuizID}"
+        delete_questions_query = f"DELETE FROM Questions WHERE QuizID = {QuizID}"
         cur.execute(delete_questions_query)
 
         # Now, delete the quiz itself
-        delete_quiz_query = f"DELETE FROM quizzes WHERE QuizID = {QuizID}"
+        delete_quiz_query = f"DELETE FROM Quizzes WHERE QuizID = {QuizID}"
         cur.execute(delete_quiz_query)
 
         # Commit the transaction
@@ -579,7 +598,7 @@ def get_quiz_list(CourseID):
     cur = conn.cursor(dictionary=True)
     sql_str = f"""
         SELECT QuizID, Title, CreatedAt, AllowStudents
-        FROM quizzes
+        FROM Quizzes
         WHERE CourseID = {CourseID}
     """
     try:
@@ -598,10 +617,10 @@ def create_quizz(CourseID,Title,TeacherID,Max_tries):
     cur = conn.cursor(dictionary=True)
     
     sql_str = f"""
-        INSERT INTO quizzes
-        (CourseID,TeacherID ,Title, Max_tries)
+        INSERT INTO Quizzes
+        (CourseID,TeacherID ,Title, Max_tries, AllowStudents)
         VALUES
-        ({CourseID}, '{TeacherID}', '{Title}', "{Max_tries}")
+        ({CourseID}, '{TeacherID}', '{Title}', "{Max_tries}" , 1)
     """
     try:
         cur.execute(sql_str)
@@ -686,7 +705,7 @@ def stop_students_viewing(QuizID):
     conn = get_conn()
     cur = conn.cursor(dictionary=True)
     sql_str = f"""
-        UPDATE `lms`.`quizzes` SET `AllowStudents` = 0 WHERE (`QuizID` = {QuizID});"""
+        UPDATE `lms`.`Quizzes` SET `AllowStudents` = 0 WHERE (`QuizID` = {QuizID});"""
     try:
         cur.execute(sql_str)
         conn.commit()
@@ -702,7 +721,7 @@ def allow_students_viewing(QuizID):
     conn = get_conn()
     cur = conn.cursor(dictionary=True)
     sql_str = f"""
-        UPDATE `lms`.`quizzes` SET `AllowStudents` = 1 WHERE (`QuizID` = {QuizID});"""
+        UPDATE `lms`.`Quizzes` SET `AllowStudents` = 1 WHERE (`QuizID` = {QuizID});"""
     try:
         cur.execute(sql_str)
         conn.commit()
@@ -766,6 +785,28 @@ def get_content_list(CourseID):
     conn.close()
     return (True, "Contents retrieved from db, successfully", content_list)
 
+def get_template(CourseID):
+    conn = get_conn()
+    cur = conn.cursor(dictionary=True)
+    sql_str = f"""
+        SELECT *
+    FROM courses
+    INNER JOIN coursetemplates ON courses.TemplateID=coursetemplates.TemplateID 
+    WHERE courses.ID = {CourseID};
+    """
+    try:
+        cur.execute(sql_str)
+    except Error as e:
+        cur.close()
+        conn.close()
+        return (False, str(e), None)
+    template = cur.fetchall()
+    cur.close()
+    conn.close()
+    if template == []:
+        return (True, "Contents retrieved from db, successfully", None)
+    return (True, "Contents retrieved from db, successfully", template[0])
+
 
 def get_course_student_list(CourseID):
     conn = get_conn()
@@ -793,7 +834,7 @@ def find_tries(QuizID, QuestionID, StudentID):
     conn = get_conn()
     cur = conn.cursor(dictionary=True)
     sql_str = f"""
-        SELECT MAX(Tries) AS Tries FROM quizresponses 
+        SELECT MAX(Tries) AS Tries FROM QuizResponses 
         WHERE QuizID = {QuizID} AND QuestionID = {QuestionID} AND StudentID = {StudentID};
     """
     try:
@@ -811,7 +852,7 @@ def save_responses(QuizID, QuestionID ,StudentID, Tries, Answer,Score,Explanatio
     conn = get_conn()
     cur = conn.cursor(dictionary=True)
     sql_str = """
-        INSERT INTO quizresponses
+        INSERT INTO QuizResponses
         (QuizID, QuestionID, StudentID, Tries, Answer, Score, Explanation)
         VALUES
         (%s, %s, %s, %s, %s, %s, %s)
@@ -838,7 +879,7 @@ def quiz_result_teacher_list(QuizID):
         SELECT q.StudentID, u.FirstName, u.LastName, MAX(q.TotalScore) AS MAXTotalScore
         FROM (
             SELECT StudentID, Tries, SUM(Score) AS TotalScore
-            FROM quizresponses
+            FROM QuizResponses
             WHERE QuizID = {QuizID}
             GROUP BY StudentID, Tries
         ) q
