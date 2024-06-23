@@ -162,7 +162,7 @@ def get_template_list():
     conn = get_conn()
     cur = conn.cursor(dictionary=True)
     sql_str = """
-        SELECT * FROM coursetemplates
+        SELECT * FROM CourseTemplates
     """
     try:
         cur.execute(sql_str)
@@ -790,9 +790,9 @@ def get_template(CourseID):
     cur = conn.cursor(dictionary=True)
     sql_str = f"""
         SELECT *
-    FROM courses
-    INNER JOIN coursetemplates ON courses.TemplateID=coursetemplates.TemplateID 
-    WHERE courses.ID = {CourseID};
+    FROM Courses
+    INNER JOIN coursetemplates ON Courses.TemplateID=coursetemplates.TemplateID 
+    WHERE Courses.ID = {CourseID};
     """
     try:
         cur.execute(sql_str)
@@ -870,7 +870,6 @@ def save_responses(QuizID, QuestionID ,StudentID, Tries, Answer,Score,Explanatio
     cur.close()
     conn.close()
     return (True, "Submited")
-#-----------------------------END Duyen------------------------------
 
 def quiz_result_teacher_list(QuizID):
     conn = get_conn()

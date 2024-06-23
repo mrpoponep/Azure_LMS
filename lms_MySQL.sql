@@ -34,6 +34,16 @@ CREATE TABLE Users (
         ON DELETE RESTRICT
     );
     
+	CREATE TABLE CourseTemplates (
+    ID INT NOT NULL AUTO_INCREMENT,
+    ClusterID INT NOT NULL,
+    Name VARCHAR(255) NOT NULL,
+    Description TEXT,
+    Contents LONGTEXT,
+    PRIMARY KEY (ID),
+    FOREIGN KEY (ClusterID) REFERENCES Clusters(ID)
+);
+    
     CREATE TABLE Courses (
         ID INT NOT NULL AUTO_INCREMENT,
         Name VARCHAR(64) NOT NULL,
@@ -41,7 +51,7 @@ CREATE TABLE Users (
         TeacherID INT NOT NULL,
         TemplateID INT NOT NUll,
         PRIMARY KEY (ID),
-        FOREIGN KEY (TemplateID) REFERENCES CourseTemplate(ID)
+        FOREIGN KEY (TemplateID) REFERENCES CourseTemplates(ID)
         ON DELETE RESTRICT,
         FOREIGN KEY (ClusterID) REFERENCES Clusters(ID)
         ON DELETE RESTRICT,
@@ -110,10 +120,3 @@ CREATE TABLE QuizResponses (
     FOREIGN KEY (QuestionID) REFERENCES Questions(QuestionID)
 );
 
-CREATE TABLE CourseTemplates (
-    ID INT NOT NULL AUTO_INCREMENT,
-    Name VARCHAR(255) NOT NULL,
-    Description TEXT,
-    Contents LONGTEXT,
-    PRIMARY KEY (ID)
-);

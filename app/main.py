@@ -1,6 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 import json
-import openai
 import os
 
 from flask_login import (
@@ -37,31 +36,6 @@ class User(UserMixin):
 @login_manager.user_loader
 def load_user(userid):
     return User(userid)
-
-openai.api_type = "azure"
-openai.api_version = "2023-05-15" 
-openai.api_base = os.getenv("AZURE_OPENAI_ENDPOINT")  # Your Azure OpenAI resource's endpoint value.
-openai.api_key = os.getenv("AZURE_OPENAI_KEY")
-#--------------------Duyên: Chatbot--------------------------
-@app.route("/chatbot")
-@login_required
-def chatbot():
-    return render_template('chat.html')
-
-@app.route('/get', methods=['POST'])
-@login_required
-def get_bot_response():
-    message = request.form['msg']
-
-    response = openai.ChatCompletion.create(
-    engine="GPT35TURBO16K", # The deployment name you chose when you deployed the GPT-3.5-Turbo or GPT-4 model.
-    messages = [
-        {"role": "system", "content": "A teacher"},
-        {"role": "user", "content": message},
-    ])
-
-    return str(response.choices[0].message.content)
-#------------------------Duyên: END Chatbot-----------------------
 
 @app.route("/")
 @login_required
@@ -495,7 +469,7 @@ def quiz_responses(CourseID,QuizID):
         for question in questions:
             answers = request.form.get(f'answer{j}')
             #auto_grading(question_title, question_type, options, student_response, suggested_answer)
-            print(question['QuestionText'],question['QuestionType'],question['Options'],answers,question['CorrectAnswer'])
+            print(question['QuestionText'],question['QuestionType'],question['Options'],answers,question['CorrectAnswer'],"")
     
             if question['CorrectAnswer']==answers:
                 score = 1
@@ -504,7 +478,7 @@ def quiz_responses(CourseID,QuizID):
             i+=1
             j+=1
             #QuizID, QuestionID ,StudentID, Tries, Answer,Score,Explanation
-            success, message = model.save_responses(QuizID, int(question['QuestionID']), StudentID, Tries, answers, score)
+            success, message = model.save_responses(QuizID, int(question['QuestionID']), StudentID, Tries, answers, score,"")
             
             if not success:
                 flash(message, "warning")
@@ -561,27 +535,5 @@ def quiz_result_student(CourseID,QuizID,StudentID,Tries):
 def endpoint_chatbot():
     pass
     
-def auto_grading(question_title, question_type, options, student_response, suggested_answer):
-    openai.api_type = "azure"
-    openai.api_version = "2023-05-15"
-    openai.api_base = os.getenv("AZURE_OPENAI_ENDPOINT")
-    openai.api_key = os.getenv("AZURE_OPENAI_KEY")
-
-    # Create the prompt with the question title and options
-    if question_type == 'multiple_choice':
-        prompt = f"You are a teacher, your responsibilities is grading the following student response and providing the answer as a JSON file including two key correctness(True/False) and a less than 5000 characters explanation:\n\nQuestion: {question_title}\n\nOptions: {', '.join(options)}\n\n Student Response: {student_response}\n\nSuggested Answer: {suggested_answer}\n\n"
-    else:
-        prompt = f"You are a teacher, your responsibilities is grading the following student response and providing the answer as a JSON file including two key correctness(True/False) and explanation:\n\nQuestion: {question_title}\n\nStudent Response: {student_response}\n\nSuggested Answer: {suggested_answer}\n\n"
-
-    response = openai.ChatCompletion.create(
-        engine="GPT35TURBO16K",
-        messages=[
-            {"role": "system", "content": "Assistant is a large language model trained by OpenAI."},
-            {"role": "user", "content": prompt}
-        ]
-    )
-    
-    data_dict = json.loads(response['choices'][0]['message']['content'])
-    return data_dict
 if __name__ == '__main__':
     app.run(debug=True)
