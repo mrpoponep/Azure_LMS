@@ -471,7 +471,7 @@ def quiz_responses(CourseID,QuizID):
             #auto_grading(question_title, question_type, options, student_response, suggested_answer)
             print(question['QuestionText'],question['QuestionType'],question['Options'],answers,question['CorrectAnswer'],"")
     
-            if question['CorrectAnswer']==answers:
+            if question['CorrectAnswer'].lower()==answers.lower():
                 score = 1
             else:
                 score = 0
