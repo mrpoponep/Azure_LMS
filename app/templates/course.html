@@ -2,95 +2,235 @@
 
 {% from 'macro.html' import page_header %}
 
+{% block stylesheet %}
+{{ super() }}
+<style>
+    /* Đảm bảo các card có margin/padding giống nhau */
+    .content-card {
+        margin-bottom: 1.5rem;
+    }
+
+    /* Căn chỉnh các nút hành động */
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: flex-end;
+    }
+
+    /* Đồng nhất khoảng cách giữa các phần */
+    .section {
+        margin-bottom: 2rem;
+    }
+
+    .course-actions {
+        margin-bottom: 2rem;
+        padding: 1rem;
+        background-color: #f8f9fa;
+        border-radius: 0.5rem;
+    }
+
+    .content-card {
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s;
+        border: none;
+    }
+
+    .content-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .video-container {
+        position: relative;
+        padding-bottom: 56.25%;
+        /* 16:9 aspect ratio */
+        height: 0;
+        overflow: hidden;
+        margin-bottom: 1rem;
+    }
+
+    .video-container iframe {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border-radius: 0.25rem;
+    }
+
+    .content-meta {
+        font-size: 0.9rem;
+        color: #6c757d;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .badge-visibility {
+        font-size: 0.8rem;
+        padding: 0.35em 0.65em;
+    }
+
+    .content-actions {
+        margin-top: 1rem;
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .quiz-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+</style>
+{% endblock %}
+
 {% block title %}
-    LMS - {{ course_data["Course Name"] }}
+LMS - {{ course_data["Course Name"] }}
 {% endblock title %}
 
 {% block content %}
-    {% if is_teacher %}
-        <div class="row">
-            <div class="col">
-                <a href="{{ url_for('student_list', CourseID=course_data['Course ID']) }}" class="btn btn-lg btn-outline-primary btn-block" role="button">Students</a>
-            </div>
-            <div class="col">
-                <a href="{{ url_for('new_content', CourseID=course_data['Course ID']) }}" class="btn btn-lg btn-outline-success btn-block" role="button">New Content</a>
-            </div>
-            <div class="col">
-                <a href="{{ url_for('create_quizz', CourseID=course_data['Course ID']) }}" class="btn btn-lg btn-outline-success btn-block" role="button">Add Quizz</a>
-            </div>
+{{ page_header(course_data["Course Name"]) }}
+
+<!-- Teacher Actions -->
+{% if is_teacher %}
+<div class="course-actions">
+    <div class="row g-3">
+        <div class="col-md-4">
+            <a href="{{ url_for('student_list', CourseID=course_data['Course ID']) }}"
+                class="btn btn-outline-primary w-100 py-2" role="button">
+                <i class="fas fa-users me-2"></i>Danh sách học viên
+            </a>
         </div>
-    {% endif %}
-    
-    {{ page_header(course_data["Course Name"]) }}
-
-    {% for content in content_list %}
-    <div class="card mt-4">
-        <div class="card-body">
-            <h3 class="card-title">
-                {{ content["Title"] }}
-            </h3>
-            <div class="card-text">
-                {{ content["TextContent"] }}
-            </div>
-            <h6 class="card-subtitle mb-2 text-muted mt-2">
-                Date: {{ content["CreatedAt"] }}
-            </h6>
-            
-            {% if is_teacher %}
-                <a href="{{ url_for('remove_content', CourseID=course_data['Course ID'], ContentID=content['ID'])}}" class="btn btn-sm btn-outline-danger" role="button">Remove</a>
-            {% endif %}
+        <div class="col-md-4">
+            <a href="{{ url_for('new_content', CourseID=course_data['Course ID']) }}"
+                class="btn btn-outline-success w-100 py-2" role="button">
+                <i class="fas fa-plus me-2"></i>Tạo nội dung mới
+            </a>
         </div>
-    </div>
-{% endfor %}
-
- <!----------------------Duyen: add quiz list------------------------>
- {% for quiz in quiz_list %}
-    <div class="card mt-4">
-        <div class="card-body">
-            <h3 class="card-title">
-                {% if quiz["AllowStudents"] == 1 %}
-                    <span class="text-success">[Visible]</span>
-                    <a id="quiz-title-{{ quiz['QuizID'] }}" href="{{ url_for('quiz_responses', CourseID=course_data['Course ID'], QuizID=quiz['QuizID']) }}">{{ quiz["Title"] }}</a>
-                {% else %}
-                    <span class="text-warning">[Hidden]</span>
-                    {{ quiz["Title"] }}
-                {% endif %}
-            </h3>
-        
-                {% if not is_teacher %}
-                <div>
-                    <a href="{{ url_for('quiz_result_student_list', CourseID=course_data['Course ID'], QuizID=quiz['QuizID'], StudentID=currentID) }}" class="btn btn-primary">Result</a>
-                </div>
-                {% endif %}
-            <h6 class="card-subtitle mb-2 text-muted mt-2">
-                Date: {{ quiz["CreatedAt"] }}
-            </h6>
-            {% if is_teacher %}
-                <a href="{{ url_for('quiz_result_teacher_list',CourseID=course_data['Course ID'], QuizID=quiz['QuizID']) }}" class="btn btn-sm btn-info" role="button">View Quiz Results</a>
-                {% if quiz["AllowStudents"] == 1 %}
-                    <a href="{{ url_for('stop_students_viewing', CourseID=course_data['Course ID'], QuizID=quiz['QuizID']) }}" class="btn btn-sm btn-warning" role="button">Stop Students from Viewing</a>
-                {% else %}
-                    <a href="{{ url_for('allow_students_viewing', CourseID=course_data['Course ID'], QuizID=quiz['QuizID']) }}" class="btn btn-sm btn-success" role="button">Allow Students to View</a>
-                {% endif %}
-                <a href="{{ url_for('remove_quiz', CourseID=course_data['Course ID'], QuizID=quiz['QuizID'])}}" class="btn btn-sm btn-outline-danger" role="button">Remove</a>
-            {% endif %}
-            
-        </div>
-    </div>
-{% endfor %}
-
- <!-----------------------END: add quiz list------------------------>
-
-{% if template %}
-<div class="card mt-4">
-    <div class="card-body">
-        <h3 class="card-title">
-            {{ template['Description'] }}
-        </h3>
-        <div class="card-text">
-            {{ template['Contents'] }}
+        <div class="col-md-4">
+            <a href="{{ url_for('create_quizz', CourseID=course_data['Course ID']) }}"
+                class="btn btn-outline-success w-100 py-2" role="button">
+                <i class="fas fa-question-circle me-2"></i>Tạo bài quiz
+            </a>
         </div>
     </div>
 </div>
 {% endif %}
+
+<!-- Course Contents -->
+<div class="container-fluid">
+
+    <div class="row">
+        <div class="col-lg">
+            {% for content in content_list %}
+            <div class="card content-card">
+                <div class="card-body">
+                    <h3 class="card-title mb-3">
+                        <i class="fas fa-file-alt text-primary me-2"></i>{{ content["Title"] }}
+                    </h3>
+
+                    <!-- Video Embed (if content contains YouTube link) -->
+                    {% if content["TextContent"] and 'youtube.com' in content["TextContent"] or 'youtu.be' in
+                    content["TextContent"] %}
+                    {% set youtube_id = content["TextContent"]|extract_youtube_id %}
+                    {% if youtube_id %}
+                    <div class="video-container mb-3">
+                        <iframe src="https://www.youtube.com/embed/{{ youtube_id }}" frameborder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowfullscreen>
+                        </iframe>
+                    </div>
+                    {% endif %}
+                    {% else %}
+                    <!-- Regular text content -->
+                    <div class="card-text mb-3">
+                        {{ content["TextContent"]|markdown|safe }}
+                    </div>
+                    {% endif %}
+
+                    <div class="content-meta">
+                        <span><i class="far fa-calendar-alt me-1"></i>
+                            {% if content["CreatedAt"] is string %}
+                            {{ content["CreatedAt"] }}
+                            {% else %}
+                            {{ content["CreatedAt"].strftime('%d/%m/%Y %H:%M') }}
+                            {% endif %}
+                        </span>
+                        {% if is_teacher %}
+                        <div class="content-actions">
+                            <a href="{{ url_for('remove_content', CourseID=course_data['Course ID'], ContentID=content['ID'])}}"
+                                class="btn btn-sm btn-outline-danger" role="button">
+                                <i class="fas fa-trash-alt me-1"></i>Xóa
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+
+        <!-- Quiz List -->
+        {% for quiz in quiz_list %}
+        <div class="card content-card">
+            <div class="card-body">
+                <h3 class="card-title mb-3">
+                    <i class="fas fa-question-circle text-info me-2"></i>
+                    {% if quiz["AllowStudents"] == 1 %}
+                    <span class="quiz-status">
+                        <span class="badge bg-success badge-visibility">Hiển thị</span>
+                        <a id="quiz-title-{{ quiz['QuizID'] }}"
+                            href="{{ url_for('quiz_responses', CourseID=course_data['Course ID'], QuizID=quiz['QuizID']) }}">
+                            {{ quiz["Title"] }}
+                        </a>
+                    </span>
+                    {% else %}
+                    <span class="quiz-status">
+                        <span class="badge bg-warning text-dark badge-visibility">Ẩn</span>
+                        {{ quiz["Title"] }}
+                    </span>
+                    {% endif %}
+                </h3>
+
+                <div class="content-meta mb-3">
+                    <span><i class="far fa-calendar-alt me-1"></i> {{ quiz["CreatedAt"]|format_datetime }}</span>
+                </div>
+
+                <div class="content-actions">
+                    {% if not is_teacher %}
+                    <a href="{{ url_for('quiz_result_student_list', CourseID=course_data['Course ID'], QuizID=quiz['QuizID'], StudentID=currentID) }}"
+                        class="btn btn-primary btn-sm">
+                        <i class="fas fa-chart-bar me-1"></i>Xem kết quả
+                    </a>
+                    {% else %}
+                    <a href="{{ url_for('quiz_result_teacher_list',CourseID=course_data['Course ID'], QuizID=quiz['QuizID']) }}"
+                        class="btn btn-info btn-sm">
+                        <i class="fas fa-list-ol me-1"></i>Kết quả học viên
+                    </a>
+                    {% if quiz["AllowStudents"] == 1 %}
+                    <a href="{{ url_for('stop_students_viewing', CourseID=course_data['Course ID'], QuizID=quiz['QuizID']) }}"
+                        class="btn btn-warning btn-sm">
+                        <i class="fas fa-eye-slash me-1"></i>Ẩn quiz
+                    </a>
+                    {% else %}
+                    <a href="{{ url_for('allow_students_viewing', CourseID=course_data['Course ID'], QuizID=quiz['QuizID']) }}"
+                        class="btn btn-success btn-sm">
+                        <i class="fas fa-eye me-1"></i>Hiện quiz
+                    </a>
+                    {% endif %}
+                    <a href="{{ url_for('remove_quiz', CourseID=course_data['Course ID'], QuizID=quiz['QuizID'])}}"
+                        class="btn btn-outline-danger btn-sm">
+                        <i class="fas fa-trash-alt me-1"></i>Xóa
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+</div>
 {% endblock content %}

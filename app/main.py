@@ -21,6 +21,43 @@ login_manager.init_app(app)
 login_manager.login_view = "login"
 login_manager.login_message_category = "danger"
 
+from datetime import datetime
+import re
+
+# Thêm các filter này vào ứng dụng Flask của bạn
+@app.template_filter('format_datetime')
+def format_datetime(value, format='%d/%m/%Y %H:%M'):
+    if isinstance(value, str):
+        try:
+            value = datetime.strptime(value, '%Y-%m-%d %H:%M:%S')  # Định dạng mặc định của SQL
+        except ValueError:
+            return value  # Trả về nguyên bản nếu không parse được
+    return value.strftime(format)
+
+@app.template_filter('extract_youtube_id')
+def extract_youtube_id(url):
+    if not url:
+        return None
+    
+    # Các pattern URL YouTube phổ biến
+    patterns = [
+        r'(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?v=([^&]+)',  # Dạng https://www.youtube.com/watch?v=ID
+        r'(?:https?:\/\/)?(?:www\.)?youtu\.be\/([^?]+)',              # Dạng https://youtu.be/ID
+        r'(?:https?:\/\/)?(?:www\.)?youtube\.com\/embed\/([^\/]+)',    # Dạng embed
+        r'(?:https?:\/\/)?(?:www\.)?youtube\.com\/v\/([^\/]+)'        # Dạng cũ
+    ]
+    
+    for pattern in patterns:
+        match = re.search(pattern, url)
+        if match:
+            return match.group(1)
+    
+    return None
+
+@app.template_filter('markdown')
+def markdown_filter(text):
+    from markdown import markdown
+    return markdown(text) if text else ""
 
 class User(UserMixin):
     def __init__(self, id):
@@ -534,6 +571,27 @@ def quiz_result_student(CourseID,QuizID,StudentID,Tries):
 @app.route('/chatbot_explain', methods=['POST'])
 def endpoint_chatbot():
     pass
+
+@app.route('/courses/register', methods=['GET', 'POST'])
+@login_required
+def course_register():
+    if request.method == 'POST':
+        CourseID = request.form.get("CourseID")
+        success, message = model.create_student_course(current_user.id, CourseID)
+        
+        if success:
+            flash(message, "success")
+        else:
+            flash(message, "warning")
+        return redirect(url_for("course_register"))
+    
+    # Sử dụng hàm hiện có get_all_course_list()
+    success, message, courses = model.get_all_course_list()
+    if not success:
+        flash('Lỗi khi tải danh sách khóa học: ' + message, 'error')
+        courses = []
+    
+    return render_template('course_register.html', courses=courses)
     
 if __name__ == '__main__':
     app.run(debug=True)

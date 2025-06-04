@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+
+{% block stylesheet %}
+    {{ super() }}
+    <style>
+        .course-card {
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+        .course-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .course-img {
+            height: 180px;
+            object-fit: cover;
+        }
+        .register-btn {
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+        }
+        .card-body {
+            position: relative;
+            padding-bottom: 60px;
+        }
+        .text-muted {
+            color: #6c757d !important;
+        }
+    </style>
+{% endblock %}
+
+{% block title %}Đăng ký Khóa học{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h2 class="mb-4">Đăng ký Khóa học Mới</h2>
+    
+    {% if not courses %}
+    <div class="alert alert-info">
+        Hiện không có khóa học nào mở đăng ký.
+    </div>
+    {% else %}
+    <div class="row">
+        {% for course in courses %}
+        <div class="col-md-4 mb-4">
+            <div class="card course-card h-100">
+                <!-- Placeholder cho ảnh -->
+                <img src="{{ url_for('static', filename='Best-online-course-platforms.webp') }}" 
+                     class="card-img-top course-img" 
+                     alt="{{ course.Name or 'Khóa học không có tên' }}">
+                
+                <div class="card-body">
+                    <h5 class="card-title">{{ course.Name or 'Khóa học chưa có tên' }}</h5>
+                    
+                    <!-- Placeholder cho giáo viên -->
+                    <p class="card-text text-muted">
+                        <i class="fas fa-chalkboard-teacher"></i> 
+                        {% if course.TeacherID %}
+                            Giáo viên ID: {{ course.TeacherID }}
+                        {% else %}
+                            Chưa có giáo viên
+                        {% endif %}
+                    </p>
+                    
+                    <!-- Placeholder cho mô tả -->
+                    <p class="card-text text-muted">
+                        <i class="fas fa-info-circle"></i>
+                        Khóa học thuộc nhóm {{ course.ClusterID or 'chưa phân nhóm' }}
+                    </p>
+                    
+                    <form method="POST" action="{{ url_for('course_register') }}">
+                        <input type="hidden" name="CourseID" value="{{ course.ID }}">
+                        <button type="submit" class="btn btn-primary register-btn">
+                            <i class="fas fa-user-plus"></i> Đăng ký
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

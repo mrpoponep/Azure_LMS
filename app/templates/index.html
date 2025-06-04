@@ -3,60 +3,257 @@
 {% block stylesheet %}
     {{ super() }}
     <link href="{{ url_for('static', filename='css/index.css') }}" rel="stylesheet">
+    <style>
+        .hero-section {
+            background: linear-gradient(135deg, #6e8efb, #a777e3);
+            color: white;
+            padding: 3rem 0;
+            margin-bottom: 2rem;
+            border-radius: 0.5rem;
+        }
+        .course-card {
+            margin-bottom: 20px;
+            transition: transform 0.2s;
+            border: none;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .course-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+        }
+        .course-price {
+            font-weight: bold;
+            color: #dc3545;
+            font-size: 1.2rem;
+        }
+        .testimonial-card {
+            background-color: #f8f9fa;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            height: 100%;
+        }
+        .star-rating {
+            color: #ffc107;
+            margin-bottom: 1rem;
+        }
+        .newsletter-section {
+            background-color: #f8f9fa;
+            padding: 2rem;
+            border-radius: 0.5rem;
+            margin-top: 2rem;
+        }
+        .btn-enroll {
+            background-color: #28a745;
+            color: white;
+            font-weight: bold;
+        }
+        .section-title {
+            position: relative;
+            margin-bottom: 2rem;
+            padding-bottom: 0.5rem;
+        }
+        .section-title:after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 50px;
+            height: 3px;
+            background: linear-gradient(135deg, #6e8efb, #a777e3);
+        }
+    </style>
 {% endblock stylesheet %}
 
 {% block title %}
-    LMS - Home
+    LMS - Trang chủ
 {% endblock title %}
 
 {% block content %}
-    {% if session.User.is_admin or session.User.is_manager %}
-        <div class="row">
-            <div class="col">
-                <a href="{{ url_for('user_list') }}" class="btn btn-lg btn-outline-primary btn-block" role="button">Users</a>
-            </div>
-            {% if session.User.is_admin or session.User.is_manager%}                
-                <div class="col">
-                    <a href="{{ url_for('cluster_list') }}" class="btn btn-lg btn-outline-primary btn-block" role="button">Clusters</a>
+    <div class="container">
+        <!-- Hero Section -->
+        <div class="hero-section text-center">
+            <h1>Giá trị của tri thức thay đổi cuộc đời bạn</h1>
+            <p class="lead">Mở rộng kỹ năng với các khóa học trực tuyến của chúng tôi. Được thiết kế cho mọi người, mọi trình độ.</p>
+            <a href="{{ url_for('course_register') }}" class="btn btn-light btn-lg">Học ngay bây giờ</a>
+        </div>
+
+        <!-- Featured Courses -->
+        <div class="mb-5">
+            <h2 class="section-title">Khóa học nổi bật</h2>
+            <div class="row">
+                <!-- Placeholder for featured courses - would normally use a loop -->
+                <div class="col-md-4">
+                    <div class="card course-card">
+                        <div class="card-body">
+                            <h5 class="card-title">Phát triển Web Hiện Đại với React và Node.js</h5>
+                            <p class="card-text text-muted">Xây dựng ứng dụng web fullstack từ cơ bản đến nâng cao</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="course-price">$112.30</span>
+                                <a href="#" class="btn btn-sm btn-enroll">Đăng ký</a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            {% endif %}
-        
-            <div class="col">
-                <a href="{{ url_for('course_list') }}" class="btn btn-lg btn-outline-primary btn-block" role="button">Courses</a>
+                <div class="col-md-4">
+                    <div class="card course-card">
+                        <div class="card-body">
+                            <h5 class="card-title">Khoa học Dữ liệu</h5>
+                            <p class="card-text text-muted">Học máy, phân tích dữ liệu và trí tuệ nhân tạo</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="course-price">$180.00</span>
+                                <a href="#" class="btn btn-sm btn-enroll">Đăng ký</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card course-card">
+                        <div class="card-body">
+                            <h5 class="card-title">Khoa học Javascript</h5>
+                            <p class="card-text text-muted">Từ cơ bản đến nâng cao với ES6+</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="course-price">$122.77</span>
+                                <a href="#" class="btn btn-sm btn-enroll">Đăng ký</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="text-center mt-3">
+                <a href="{{ url_for('course_register') }}" class="btn btn-outline-primary">Xem toàn bộ khóa học</a>
             </div>
         </div>
-    {% endif %}
 
-    {% for course in student_course_list %}
-        <div class="card mt-4">
-            <div class="card-body">
-                <a href="{{ url_for('course', CourseID=course["Course ID"]) }}" class="course-link">
-                    <h5 class="card-title">
-                        {{ course["Course Name"] }}
-                        <span class="badge badge-primary">
-                            Student
-                        </span>
-                    </h5>
-                </a>
-            <h6 class="card-subtitle mb-2 text-muted">Teacher: {{ course["Teacher First Name"] }} {{ course["Teacher Last Name"] }}</h6>
+        <!-- Testimonials -->
+        <div class="mb-5">
+            <h2 class="section-title">Phản hồi từ học viên</h2>
+            <p class="text-muted mb-4">Lắng nghe học viên và cải thiện trải nghiệm học tập.</p>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="testimonial-card">
+                        <div class="star-rating">
+                            ★★★★★☆
+                        </div>
+                        <p>"Khóa học rất chi tiết và dễ hiểu, tôi đã áp dụng được ngay vào công việc."</p>
+                        <div class="font-weight-bold">An Khánh</div>
+                        <div class="text-muted">HUST</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="testimonial-card">
+                        <div class="star-rating">
+                            ★★★★★☆
+                        </div>
+                        <p>"Tài liệu học tập rõ ràng, dễ tiếp thu, trung tâm hỗ trợ nhiệt tình trong việc học tập."</p>
+                        <div class="font-weight-bold">Tài Minh Ánh</div>
+                        <div class="text-muted">SOCT</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="testimonial-card">
+                        <div class="star-rating">
+                            ★★★★★☆
+                        </div>
+                        <p>"Tài chính hợp lý, phương pháp học mới lạ, không cần phải đến lớp học."</p>
+                        <div class="font-weight-bold">Trương Anh Đức</div>
+                        <div class="text-muted">IT-K</div>
+                    </div>
+                </div>
             </div>
         </div>
-    {% endfor %}
 
-    {% for course in teacher_course_list %}
-        <div class="card mt-4">
-            <div class="card-body">
-                <a href="{{ url_for('course', CourseID=course["Course ID"]) }}" class="course-link">
-                    <h5 class="card-title">
-                        {{ course["Course Name"] }}
-                        <span class="badge badge-danger">
-                            Teacher
-                        </span>
-                    </h5>
-                </a>
-            <h6 class="card-subtitle mb-2 text-muted">Teacher: {{ course["Teacher First Name"] }} {{ course["Teacher Last Name"] }}</h6>
+
+
+        <!-- My Courses (Existing Functionality) -->
+        {% if student_course_list %}
+        <div class="row mb-4 mt-5">
+            <div class="col-12">
+                <h2 class="section-title">Khóa học của tôi</h2>
+            </div>
+            {% for course in student_course_list %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card course-card h-100">
+                    <div class="card-body">
+                        <span class="badge badge-primary">Học viên</span>
+                        <h5 class="card-title mt-2">
+                            <a href="{{ url_for('course', CourseID=course['Course ID']) }}">
+                                {{ course["Course Name"] }}
+                            </a>
+                        </h5>
+                        <p class="card-text text-muted">
+                            Giảng viên: {{ course["Teacher First Name"] }} {{ course["Teacher Last Name"] }}
+                        </p>
+                        <a href="{{ url_for('course', CourseID=course['Course ID']) }}" 
+                           class="btn btn-sm btn-outline-primary">
+                            Vào khóa học
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Teacher Courses -->
+        {% if teacher_course_list %}
+        <div class="row mt-5">
+            <div class="col-12">
+                <h2 class="section-title">Khóa học giảng dạy</h2>
+            </div>
+            {% for course in teacher_course_list %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card course-card h-100">
+                    <div class="card-body">
+                        <span class="badge badge-danger">Giảng viên</span>
+                        <h5 class="card-title mt-2">
+                            <a href="{{ url_for('course', CourseID=course['Course ID']) }}">
+                                {{ course["Course Name"] }}
+                            </a>
+                        </h5>
+                        <p class="card-text text-muted">
+                            Giảng viên: {{ course["Teacher First Name"] }} {{ course["Teacher Last Name"] }}
+                        </p>
+                        <a href="{{ url_for('course', CourseID=course['Course ID']) }}" 
+                           class="btn btn-sm btn-outline-primary">
+                            Quản lý khóa học
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Empty State -->
+        {% if not student_course_list and not teacher_course_list %}
+        <div class="text-center py-5">
+            <h4 class="mb-3">Bạn chưa tham gia khóa học nào</h4>
+            <a href="{{ url_for('course_register') }}" class="btn btn-primary">
+                Xem các khóa học hiện có
+            </a>
+        </div>
+        {% endif %}
+
+                <!-- Newsletter -->
+        <div class="newsletter-section">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <h3>Cập nhật thông tin mới nhất</h3>
+                    <p class="text-muted">Tin tức khóa học sẽ được gửi đến bạn mỗi tuần.</p>
+                </div>
+                <div class="col-md-6">
+                    <form>
+                        <div class="input-group">
+                            <input type="email" class="form-control" placeholder="Nhập email của bạn">
+                            <div class="input-group-append">
+                                <button class="btn btn-primary" type="submit">Theo dõi</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
-    {% endfor %}
+    </div>
+
 
 {% endblock content %}

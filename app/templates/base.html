@@ -14,36 +14,57 @@
 </head>
 <body>
     {% block navbar %}
-        <nav class="navbar navbar-expand-lg navbar-light bg-light">
-            <a class="navbar-brand" href="{{ url_for('index') }}">LMS</a>
-            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
-                aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                <ul class="navbar-nav mr-auto">
-                    <li class="nav-item active">
-                        <a class="nav-link" href="{{ url_for('index') }}">Home <span class="sr-only">(current)</span></a>
-                    </li>
-                    
-                    <li class="nav-item active dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown"
-                            aria-haspopup="true" aria-expanded="false">
-                            {{ session.User.Username }}
-                        </a>
-                        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-                            <a class="dropdown-item" href="{{ url_for('profile', ID=session.User.ID) }}">Profile</a>
-                            <div class="dropdown-divider"></div>
-                            <a class="dropdown-item" href="{{ url_for('logout') }}">Logout</a>
-                        </div>
-                    </li>
-                </ul>
-                <ul class="navbar-nav navbar-right">
-                    <a href="{{ url_for('logout') }}" class="btn btn-outline-danger" role="button">Logout</a>
-                </ul>
-            </div>
-        </nav>
-    {% endblock navbar %}
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <a class="navbar-brand" href="{{ url_for('index') }}">LMS</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+        aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item active">
+                <a class="nav-link" href="{{ url_for('index') }}">Home <span class="sr-only">(current)</span></a>
+            </li>
+            
+            <!-- Menu cho Admin/Manager -->
+            {% if session.User.is_admin or session.User.is_manager %}
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="managementDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    Quản lý
+                </a>
+                <div class="dropdown-menu" aria-labelledby="managementDropdown">
+                    <a class="dropdown-item" href="{{ url_for('user_list') }}">Người dùng</a>
+                    <a class="dropdown-item" href="{{ url_for('course_list') }}">Khóa học</a>
+                    {% if session.User.is_admin %}
+                    <a class="dropdown-item" href="{{ url_for('cluster_list') }}">Nhóm</a>
+                    {% endif %}
+                </div>
+            </li>
+            {% endif %}
+            
+            <!-- Menu chung -->
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('course_register') }}">Danh sách khóa học</a>
+            </li>
+        </ul>
+        
+        <ul class="navbar-nav">
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown"
+                    aria-haspopup="true" aria-expanded="false">
+                    {{ session.User.Username }}
+                </a>
+                <div class="dropdown-menu dropdown-menu-right" aria-labelledby="userDropdown">
+                    <a class="dropdown-item" href="{{ url_for('profile', ID=session.User.ID) }}">Profile</a>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item" href="{{ url_for('logout') }}">Logout</a>
+                </div>
+            </li>
+        </ul>
+    </div>
+</nav>
+{% endblock %}
+    
     <div class="container my-container">
         <div class="flash">
             {% block flash %}
@@ -59,6 +80,7 @@
         {% block content %}
         {% endblock content %}
     </div>
+    
     {% block script %}
         <script src="{{ url_for('static', filename='js/jquery-3.4.1.slim.min.js') }}"></script>
         <script src="{{ url_for('static', filename='js/popper.min.js') }}"></script>
